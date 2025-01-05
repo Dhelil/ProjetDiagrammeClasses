@@ -1,21 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace ProjetDiagrammeClasses.Class
 {
     internal class Attribut
     {
-        public string nom;              // Nom de l'attribut
-        public TypeE type;              // Type de l'attribut
-        public VisibiliteE visibilite;  // Visibilité de l'attribut
+        // Propriétés automatiques
+        public string nom { get; set; }              // Nom de l'attribut
+        public TypeE Type { get; set; }             // Type de l'attribut
+        public VisibiliteE Visibilite { get; set; } // Visibilité de l'attribut
 
         // Déclaration de l'énumération pour les types d'attribut
         public enum TypeE
         {
             Int,
             Float,
+            Double,
             Char,
-            String
+            String,
+            Bool,
+            Object
         }
 
         // Déclaration de l'énumération pour la visibilité
@@ -26,22 +29,23 @@ namespace ProjetDiagrammeClasses.Class
             Protected
         }
 
-        // Constructeur
-        public Attribut(string UnNom, TypeE UnType, VisibiliteE UneVisibilite)
+        // Constructeur avec validation
+        public Attribut(string unNom, TypeE unType, VisibiliteE uneVisibilite)
         {
-            nom = UnNom;
-            type = UnType;
-            visibilite = UneVisibilite;
+            if (string.IsNullOrWhiteSpace(unNom))
+            {
+                throw new ArgumentException("Le nom de l'attribut ne peut pas être vide ou null.");
+            }
+
+            nom = unNom;
+            Type = unType;
+            Visibilite = uneVisibilite;
         }
 
-        // Getters
-        public string getNom() { return nom; }
-        public string getType() { return type.ToString(); }
-        public string getVisibilite() { return visibilite.ToString(); }
-
-        // Setters
-        public void setNom(string UnNewnom) { nom = UnNewnom; }
-        public void setType(TypeE UnNewType) { type = UnNewType; }
-        public void setVisibilite(VisibiliteE UneNewVisibilite) { visibilite = UneNewVisibilite; }
+        // Méthode ToString pour une représentation textuelle de l'attribut
+        public override string ToString()
+        {
+            return $"{Visibilite.ToString().ToLower()} {Type.ToString().ToLower()} {nom}";
+        }
     }
 }

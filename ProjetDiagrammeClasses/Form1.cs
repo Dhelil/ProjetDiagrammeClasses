@@ -50,10 +50,16 @@ namespace ProjetDiagrammeClasses
             nouvelleClasseItem.Click += (s, e) => DemanderNomClasse(fenetreTravail);
             classeMenu.DropDownItems.Add(nouvelleClasseItem);
 
+            // Menu "Attribut"
+            ToolStripMenuItem attributMenu = new ToolStripMenuItem("Attribut");
+            ToolStripMenuItem nouvelAttributItem = new ToolStripMenuItem("Nouvel Attribut");
+            nouvelAttributItem.Click += (s, e) => DemanderClassePourAjouterAttribut(fenetreTravail);
+            attributMenu.DropDownItems.Add(nouvelAttributItem);
+
             // Menu "Méthode"
             ToolStripMenuItem methodeMenu = new ToolStripMenuItem("Méthode");
             ToolStripMenuItem nouvelleMethodeItem = new ToolStripMenuItem("Nouvelle Méthode");
-            nouvelleMethodeItem.Click += (s, e) => MessageBox.Show("Ajout de méthode non encore implémenté.");
+            nouvelleMethodeItem.Click += (s, e) => DemanderClassePourAjouterMethode(fenetreTravail);
             methodeMenu.DropDownItems.Add(nouvelleMethodeItem);
 
             // Menu "Relation"
@@ -63,12 +69,227 @@ namespace ProjetDiagrammeClasses
             relationMenu.DropDownItems.Add(nouvelleRelationItem);
 
             menuStrip.Items.Add(classeMenu);
+            menuStrip.Items.Add(attributMenu);
             menuStrip.Items.Add(methodeMenu);
             menuStrip.Items.Add(relationMenu);
 
             fenetreTravail.MainMenuStrip = menuStrip;
             fenetreTravail.Controls.Add(menuStrip);
         }
+
+        public static class Prompt
+        {
+            public static string ShowDialog(string text, string caption)
+            {
+                Form prompt = new Form
+                {
+                    Width = 400,
+                    Height = 200,
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    Text = caption,
+                    StartPosition = FormStartPosition.CenterScreen
+                };
+
+                Label textLabel = new Label { Left = 20, Top = 20, Text = text, Width = 340 };
+                TextBox textBox = new TextBox { Left = 20, Top = 50, Width = 340 };
+                Button confirmation = new Button { Text = "OK", Left = 270, Width = 90, Top = 100, DialogResult = DialogResult.OK };
+
+                prompt.Controls.Add(textLabel);
+                prompt.Controls.Add(textBox);
+                prompt.Controls.Add(confirmation);
+
+                prompt.AcceptButton = confirmation;
+
+                return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : null;
+            }
+        }
+
+
+        private void DemanderClassePourAjouterAttribut(Form fenetreTravail)
+        {
+            // Obtenir les panels de classes dans la fenêtre de travail
+            var classesPanels = fenetreTravail.Controls.OfType<Panel>()
+                .Where(panel => panel.Controls.OfType<Label>().Any())
+                .ToList();
+
+            if (!classesPanels.Any())
+            {
+                MessageBox.Show("Aucune classe n'est disponible. Veuillez créer une classe avant d'ajouter un attribut.",
+                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Créer une fenêtre pour sélectionner une classe
+            Form dialogue = new Form
+            {
+                Text = "Sélectionner une Classe",
+                Size = new Size(300, 200),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MinimizeBox = false,
+                MaximizeBox = false
+            };
+
+            ListBox classesListBox = new ListBox
+            {
+                Dock = DockStyle.Fill
+            };
+
+            foreach (var panel in classesPanels)
+            {
+                var nomClasseLabel = panel.Controls.OfType<Label>().FirstOrDefault();
+                if (nomClasseLabel != null)
+                {
+                    classesListBox.Items.Add(nomClasseLabel.Text); // Ajouter le nom de la classe à la liste
+                }
+            }
+
+            Button validerButton = new Button
+            {
+                Text = "Valider",
+                Dock = DockStyle.Bottom
+            };
+
+            validerButton.Click += (s, e) =>
+            {
+                if (classesListBox.SelectedItem != null)
+                {
+                    string nomClasse = classesListBox.SelectedItem.ToString();
+                    var classePanel = classesPanels.FirstOrDefault(panel =>
+                        panel.Controls.OfType<Label>().Any(label => label.Text == nomClasse));
+                    var attributsListBox = classePanel?.Controls.OfType<ListBox>().FirstOrDefault();
+
+                    // Si la classe a des attributs
+                    if (attributsListBox != null)
+                    {
+                        // Demander l'attribut à ajouter
+                        string nomAttribut = Prompt.ShowDialog("Entrez le nom de l'attribut :", "Ajouter Attribut");
+                        string typeAttribut = Prompt.ShowDialog("Entrez le type de l'attribut (Int, Float, Char, String) :", "Ajouter Attribut");
+
+                        if (!string.IsNullOrEmpty(nomAttribut) && !string.IsNullOrEmpty(typeAttribut))
+                        {
+                            AjouterAttribut(nomClasse, nomAttribut, typeAttribut); // Ajouter l'attribut à la classe
+                            attributsListBox.Items.Add($"{nomAttribut} : {typeAttribut}"); // Afficher l'attribut dans la liste de la classe
+                            MessageBox.Show($"Attribut '{nomAttribut} : {typeAttribut}' ajouté à la classe '{nomClasse}'.");
+                            dialogue.Close(); // Fermer le dialogue
+                        }
+                        else
+                        {
+                            MessageBox.Show("Le nom ou le type de l'attribut est vide.");
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Veuillez sélectionner une classe.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            };
+
+            dialogue.Controls.Add(classesListBox);
+            dialogue.Controls.Add(validerButton);
+            dialogue.ShowDialog();
+        }
+
+
+
+        private List<Classe> classes = new List<Classe>();
+
+
+        private Classe ObtenirClasseParNom(string nomClasse)
+        {
+            return classes.FirstOrDefault(c => c.Nom == nomClasse);
+        }
+
+
+
+        public void AjouterAttribut(string nomClasse, string nomAttribut, string typeAttribut)
+        {
+            Classe classe = ObtenirClasseParNom(nomClasse);
+            if (classe != null)
+            {
+                // Si nécessaire, adapte le constructeur d'Attribut pour inclure 'type' comme string
+                classe.Attributs.Add(new Attribut(nomAttribut, Attribut.TypeE.String, Attribut.VisibiliteE.Private));
+            }
+            else
+            {
+                //MessageBox.Show($"La classe '{nomClasse}' n'existe pas.");
+            }
+        }
+
+
+
+
+        private void DemanderClassePourAjouterMethode(Form fenetreTravail)
+        {
+            // Récupérer toutes les classes (panels) dans la fenêtre de travail
+            var classesPanels = fenetreTravail.Controls.OfType<Panel>()
+                .Where(panel => panel.Controls.OfType<Label>().Any())
+                .ToList();
+
+            if (!classesPanels.Any())
+            {
+                MessageBox.Show("Aucune classe n'est disponible. Veuillez créer une classe avant d'ajouter une méthode.",
+                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Form dialogue = new Form
+            {
+                Text = "Sélectionner une Classe",
+                Size = new Size(300, 200),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MinimizeBox = false,
+                MaximizeBox = false
+            };
+
+            ListBox classesListBox = new ListBox
+            {
+                Dock = DockStyle.Fill
+            };
+
+            foreach (var panel in classesPanels)
+            {
+                var nomClasseLabel = panel.Controls.OfType<Label>().FirstOrDefault();
+                if (nomClasseLabel != null)
+                {
+                    classesListBox.Items.Add(nomClasseLabel.Text);
+                }
+            }
+
+            Button validerButton = new Button
+            {
+                Text = "Valider",
+                Dock = DockStyle.Bottom
+            };
+
+
+            validerButton.Click += (s, e) =>
+            {
+                if (classesListBox.SelectedItem != null)
+                {
+                    string nomClasse = classesListBox.SelectedItem.ToString();
+                    var classePanel = classesPanels.FirstOrDefault(panel =>
+                        panel.Controls.OfType<Label>().Any(label => label.Text == nomClasse));
+                    var methodesListBox = classePanel?.Controls.OfType<ListBox>().LastOrDefault();
+
+                    if (methodesListBox != null)
+                    {
+                        AjouterMethode(fenetreTravail, methodesListBox);
+                        dialogue.Close();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Veuillez sélectionner une classe.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            };
+
+            dialogue.Controls.Add(classesListBox);
+            dialogue.Controls.Add(validerButton);
+            dialogue.ShowDialog();
+        }
+
 
         private void DemanderNomClasse(Form fenetreTravail)
         {
@@ -88,6 +309,7 @@ namespace ProjetDiagrammeClasses
                 Location = new Point(10, 10),
                 AutoSize = true
             };
+
             dialogue.Controls.Add(instructionLabel);
 
             TextBox nomTextBox = new TextBox
@@ -103,6 +325,7 @@ namespace ProjetDiagrammeClasses
                 Location = new Point(100, 80),
                 DialogResult = DialogResult.OK
             };
+
             validerButton.Click += (s, e) =>
             {
                 if (!string.IsNullOrWhiteSpace(nomTextBox.Text))
@@ -115,6 +338,7 @@ namespace ProjetDiagrammeClasses
                     MessageBox.Show("Le nom ne peut pas être vide.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             };
+
             dialogue.Controls.Add(validerButton);
 
             Button annulerButton = new Button
@@ -123,6 +347,7 @@ namespace ProjetDiagrammeClasses
                 Location = new Point(180, 80),
                 DialogResult = DialogResult.Cancel
             };
+
             dialogue.Controls.Add(annulerButton);
 
             dialogue.ShowDialog();
@@ -163,13 +388,7 @@ namespace ProjetDiagrammeClasses
                 Height = 50
             };
 
-            // Ajout d'un événement pour ajouter une méthode
-            methodesListBox.DoubleClick += (s, e) =>
-            {
-                AjouterMethode(fenetreTravail, methodesListBox);
-            };
-
-            // Événements pour permettre la gestion des attributs/méthodes et le déplacement
+            // Événements pour permettre la gestion des attributs et le déplacement
             nouvelleClassePanel.MouseDown += (s, e) =>
             {
                 if (e.Button == MouseButtons.Left)
@@ -187,7 +406,6 @@ namespace ProjetDiagrammeClasses
                 }
             };
 
-            nouvelleClassePanel.Click += (s, e) => AjouterAttribut(fenetreTravail, attributsListBox);
 
             nomClasseLabel.DoubleClick += (s, e) => ModifierClasse(fenetreTravail, nomClasseLabel);
 
@@ -197,6 +415,7 @@ namespace ProjetDiagrammeClasses
 
             fenetreTravail.Controls.Add(nouvelleClassePanel);
         }
+
 
 
 
@@ -244,7 +463,7 @@ namespace ProjetDiagrammeClasses
         }
 
 
-
+        // Méthode permettant de modifier le nom d'une classe
         private void ModifierClasse(Form fenetreTravail, Label nomClasseLabel)
         {
             Form dialogue = new Form
@@ -303,6 +522,8 @@ namespace ProjetDiagrammeClasses
 
             dialogue.ShowDialog();
         }
+
+
 
         private void AjouterAttribut(Form fenetreTravail, ListBox attributsListBox)
         {
@@ -392,7 +613,7 @@ namespace ProjetDiagrammeClasses
                     Attribut nouvelAttribut = new Attribut(nomAttribut, typeAttribut, visibiliteAttribut);
 
                     // Ajouter l'attribut à la liste des attributs de la classe
-                    attributsListBox.Items.Add($"{nouvelAttribut.getNom()} : {nouvelAttribut.getType()} ({nouvelAttribut.getVisibilite()})");
+                    attributsListBox.Items.Add($"{nouvelAttribut.nom} : {nouvelAttribut.Type} ({nouvelAttribut.Visibilite})");
 
                     dialogue.Close();
                 }
