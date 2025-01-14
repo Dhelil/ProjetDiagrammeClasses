@@ -27,6 +27,7 @@ namespace ProjetDiagrammeClasses.Class
         // Méthode permettant d'ajouter une classe
         public event Action ClasseAjoutee;
 
+        // Méthode permettant d'ajouter une classe
         public void AjouterClasse(Classe nouvelleClasse)
         {
             if (nouvelleClasse == null)
@@ -38,7 +39,6 @@ namespace ProjetDiagrammeClasses.Class
                 ClasseAjoutee?.Invoke(); // Notifie qu'une classe a été ajoutée
             }
         }
-
 
 
         // Méthode permettant d'ajouter une relation

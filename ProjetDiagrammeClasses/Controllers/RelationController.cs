@@ -9,8 +9,7 @@ namespace ProjetDiagrammeClasses.Controllers
 {
     internal class RelationController
     {
-        private Panel relationPanel;
-        private List<Panel> lines = new List<Panel>();  // Pour stocker les lignes représentant les relations
+        private List<Panel> lines = new List<Panel>(); // Pour stocker les lignes représentant les relations
         private List<Line> drawnLines = new List<Line>(); // Liste des lignes dessinées pour les relations
 
         // Structure pour stocker les lignes dessinées entre les classes
@@ -28,153 +27,129 @@ namespace ProjetDiagrammeClasses.Controllers
             }
         }
 
-        // Méthode pour ajouter une relation dans un panneau dédié entre les deux classes
+        // Méthode pour ajouter une relation entre deux classes
         private void AjouterRelation(Form fenetreTravail, string relationNom, string typeRelation, Panel sourcePanel, Panel ciblePanel)
         {
-            // Créer et configurer le panneau de relation (petit carré)
+            // Calcul de la position du panneau de relation
             int xPosition = (sourcePanel.Location.X + sourcePanel.Width + ciblePanel.Location.X) / 2;
             int yPosition = (sourcePanel.Location.Y + ciblePanel.Location.Y) / 2;
 
-            relationPanel = new Panel
+            Panel relationPanel = new Panel
             {
-                Size = new Size(100, 50), // Taille réduite pour la relation
+                Size = new Size(100, 50), // Taille réduite pour le panneau de relation
                 Location = new Point(xPosition - 50, yPosition - 25), // Centrer le panneau entre les deux classes
                 BackColor = Color.LightBlue,
                 BorderStyle = BorderStyle.FixedSingle
             };
 
-            // Ajouter une étiquette pour afficher la relation avec le type entre parenthèses
             Label relationLabel = new Label
             {
-                Text = $"{relationNom} ({typeRelation})", // Afficher le nom de la relation suivi du type entre parenthèses
+                Text = $"{relationNom} ({typeRelation})", // Afficher le nom de la relation suivi du type
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Arial", 8, FontStyle.Regular)
             };
 
             relationPanel.Controls.Add(relationLabel);
-            fenetreTravail.Controls.Add(relationPanel); // Ajouter le panneau de relation à la fenêtre principale
+            fenetreTravail.Controls.Add(relationPanel);
 
-            // Dessiner les traits reliant les deux classes à la relation
+            // Dessiner les lignes reliant les classes et le panneau de relation
             DrawConnectionLines(fenetreTravail, sourcePanel, ciblePanel, relationPanel);
 
-            // Ajouter des événements de déplacement pour mettre à jour les relations et les lignes
-            sourcePanel.MouseMove += (s, e) => UpdateRelationPosition(fenetreTravail, sourcePanel, ciblePanel);
-            ciblePanel.MouseMove += (s, e) => UpdateRelationPosition(fenetreTravail, sourcePanel, ciblePanel);
+            // Mettre à jour les lignes lors du déplacement des classes
+            sourcePanel.MouseMove += (s, e) => UpdateRelationPosition(fenetreTravail, sourcePanel, ciblePanel, relationPanel);
+            ciblePanel.MouseMove += (s, e) => UpdateRelationPosition(fenetreTravail, sourcePanel, ciblePanel, relationPanel);
         }
 
-        // Méthode pour dessiner des lignes entre les classes et la relation
+
+
+        // Méthode pour dessiner les lignes entre les classes et le panneau de relation
         private void DrawConnectionLines(Form fenetreTravail, Panel sourcePanel, Panel ciblePanel, Panel relationPanel)
         {
-            // Créer un objet Graphics pour dessiner sur le panneau de la fenêtre
             Graphics graphics = fenetreTravail.CreateGraphics();
 
-            // Calcul des points de départ et d'arrivée des lignes
             Point sourcePoint = new Point(sourcePanel.Location.X + sourcePanel.Width / 2, sourcePanel.Location.Y + sourcePanel.Height / 2);
             Point ciblePoint = new Point(ciblePanel.Location.X + ciblePanel.Width / 2, ciblePanel.Location.Y + ciblePanel.Height / 2);
             Point relationPoint = new Point(relationPanel.Location.X + relationPanel.Width / 2, relationPanel.Location.Y + relationPanel.Height / 2);
 
-            // Ajouter la ligne entre la source et la relation
             Line line1 = new Line(sourcePoint, relationPoint);
             drawnLines.Add(line1);
             DrawLine(graphics, line1);
 
-            // Ajouter la ligne entre la relation et la cible
             Line line2 = new Line(relationPoint, ciblePoint);
             drawnLines.Add(line2);
             DrawLine(graphics, line2);
         }
 
-        // Méthode pour dessiner une ligne donnée
+        // Méthode pour dessiner une ligne
         private void DrawLine(Graphics graphics, Line line)
         {
             graphics.DrawLine(line.Pen, line.Start, line.End);
         }
 
-        // Méthode pour mettre à jour la position de la relation et des lignes lors du déplacement des classes
-        private void UpdateRelationPosition(Form fenetreTravail, Panel sourcePanel, Panel ciblePanel)
+        // Mettre à jour la position de la relation et des lignes lors du déplacement des classes
+        private void UpdateRelationPosition(Form fenetreTravail, Panel sourcePanel, Panel ciblePanel, Panel relationPanel)
         {
-            // Recalculer la position du panneau de relation entre les deux classes
             int xPosition = (sourcePanel.Location.X + sourcePanel.Width + ciblePanel.Location.X) / 2;
             int yPosition = (sourcePanel.Location.Y + ciblePanel.Location.Y) / 2;
 
             relationPanel.Location = new Point(xPosition - 50, yPosition - 25);
 
-            // Effacer les anciennes lignes avant de redessiner
-            foreach (var line in drawnLines)
-            {
-                line.Pen.Dispose();
-            }
-            drawnLines.Clear();
+            fenetreTravail.Invalidate();
+            fenetreTravail.Update();
 
-            // Effacer les anciennes relations sur le formulaire
-            fenetreTravail.Invalidate(); // Réinitialiser le graphique
-            fenetreTravail.Update(); // Forcer la mise à jour de l'affichage graphique
-
-            // Redessiner les lignes après le déplacement
             Graphics graphics = fenetreTravail.CreateGraphics();
+
             Point sourcePoint = new Point(sourcePanel.Location.X + sourcePanel.Width / 2, sourcePanel.Location.Y + sourcePanel.Height / 2);
             Point ciblePoint = new Point(ciblePanel.Location.X + ciblePanel.Width / 2, ciblePanel.Location.Y + ciblePanel.Height / 2);
             Point relationPoint = new Point(relationPanel.Location.X + relationPanel.Width / 2, relationPanel.Location.Y + relationPanel.Height / 2);
 
-            // Ajouter la ligne entre la source et la relation
             Line line1 = new Line(sourcePoint, relationPoint);
-            drawnLines.Add(line1);
-            DrawLine(graphics, line1);
-
-            // Ajouter la ligne entre la relation et la cible
             Line line2 = new Line(relationPoint, ciblePoint);
+
+            drawnLines.Clear();
+            drawnLines.Add(line1);
             drawnLines.Add(line2);
+
+            DrawLine(graphics, line1);
             DrawLine(graphics, line2);
         }
 
         public void DemanderClassesPourRelation(Form fenetreTravail)
         {
-            // Récupérer toutes les classes (panels) dans la fenêtre de travail
             var classesPanels = fenetreTravail.Controls.OfType<Panel>()
-                .Where(panel => panel.Controls.OfType<Label>().Any())
+                .Where(panel => panel.Controls.OfType<Label>().Any() && !string.IsNullOrEmpty(panel.Controls.OfType<Label>().FirstOrDefault()?.Text))
                 .ToList();
 
             if (classesPanels.Count < 2)
             {
-                MessageBox.Show("Vous devez avoir au moins deux classes pour créer une relation.",
-                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vous devez avoir au moins deux classes pour créer une relation.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Fenêtre pour sélectionner les classes
             Form dialogue = new Form
             {
                 Text = "Sélectionner les Classes",
                 Size = new Size(400, 300),
-                StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MinimizeBox = false,
-                MaximizeBox = false
+                StartPosition = FormStartPosition.CenterParent
             };
 
-            // ListBox pour sélectionner les classes source et cible
             ListBox sourceListBox = new ListBox { Dock = DockStyle.Left, Width = 150 };
             ListBox cibleListBox = new ListBox { Dock = DockStyle.Right, Width = 150 };
 
             foreach (var panel in classesPanels)
             {
-                var nomClasseLabel = panel.Controls.OfType<Label>().FirstOrDefault();
-                if (nomClasseLabel != null)
-                {
-                    sourceListBox.Items.Add(nomClasseLabel.Text);
-                    cibleListBox.Items.Add(nomClasseLabel.Text);
-                }
+                string nomClasse = panel.Controls.OfType<Label>().FirstOrDefault()?.Text;
+                sourceListBox.Items.Add(nomClasse);
+                cibleListBox.Items.Add(nomClasse);
             }
 
-            // Champs pour le nom de la relation
             TextBox relationNomTextBox = new TextBox
             {
-                PlaceholderText = "Nom de la relation (verbe)",
+                PlaceholderText = "Nom de la relation",
                 Dock = DockStyle.Top
             };
 
-            // Combobox pour sélectionner le type de relation
             ComboBox typeRelationComboBox = new ComboBox
             {
                 Dock = DockStyle.Top,
@@ -183,7 +158,6 @@ namespace ProjetDiagrammeClasses.Controllers
             };
             typeRelationComboBox.SelectedIndex = 0;
 
-            // Bouton pour valider la relation
             Button validerButton = new Button
             {
                 Text = "Valider",
@@ -198,32 +172,29 @@ namespace ProjetDiagrammeClasses.Controllers
                     return;
                 }
 
-                if (sourceListBox.SelectedItem != null && cibleListBox.SelectedItem != null)
-                {
-                    string classeSource = sourceListBox.SelectedItem.ToString();
-                    string classeCible = cibleListBox.SelectedItem.ToString();
+                string classeSource = sourceListBox.SelectedItem?.ToString();
+                string classeCible = cibleListBox.SelectedItem?.ToString();
 
-                    Panel sourcePanel = classesPanels.FirstOrDefault(panel => panel.Controls.OfType<Label>().FirstOrDefault()?.Text == classeSource);
-                    Panel ciblePanel = classesPanels.FirstOrDefault(panel => panel.Controls.OfType<Label>().FirstOrDefault()?.Text == classeCible);
+                if (!string.IsNullOrEmpty(classeSource) && !string.IsNullOrEmpty(classeCible))
+                {
+                    var sourcePanel = classesPanels.FirstOrDefault(p => p.Controls.OfType<Label>().FirstOrDefault()?.Text == classeSource);
+                    var ciblePanel = classesPanels.FirstOrDefault(p => p.Controls.OfType<Label>().FirstOrDefault()?.Text == classeCible);
 
                     if (sourcePanel != null && ciblePanel != null)
                     {
-                        AjouterRelation(fenetreTravail, relationNom, typeRelationComboBox.Text, sourcePanel, ciblePanel);
+                        string typeRelation = typeRelationComboBox.SelectedItem?.ToString() ?? "Association";
+                        AjouterRelation(fenetreTravail, relationNom, typeRelation, sourcePanel, ciblePanel);
                         dialogue.Close();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Erreur lors de la sélection des classes.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
             };
 
-            // Ajouter les contrôles au dialogue
-            dialogue.Controls.Add(sourceListBox);
-            dialogue.Controls.Add(cibleListBox);
             dialogue.Controls.Add(relationNomTextBox);
             dialogue.Controls.Add(typeRelationComboBox);
+            dialogue.Controls.Add(sourceListBox);
+            dialogue.Controls.Add(cibleListBox);
             dialogue.Controls.Add(validerButton);
+
             dialogue.ShowDialog();
         }
     }
