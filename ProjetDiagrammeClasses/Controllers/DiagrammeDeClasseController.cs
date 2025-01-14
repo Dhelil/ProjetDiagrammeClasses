@@ -17,6 +17,8 @@ namespace ProjetDiagrammeClasses.Controllers
 
         MethodeController methodeController = new MethodeController();
 
+        RelationController relationController = new RelationController();
+
         private void InitializeFenetreTravail(Form fenetreTravail)
         {
 
@@ -66,7 +68,7 @@ namespace ProjetDiagrammeClasses.Controllers
             ToolStripMenuItem nouvelleRelationItem = new ToolStripMenuItem("Nouvelle Relation");
             // Associe un événement au clic sur "Nouvelle Relation"
             // Affiche un message indiquant que la fonctionnalité n'est pas encore implémentée
-            nouvelleRelationItem.Click += (s, e) => MessageBox.Show("Ajout de relation non encore implémenté.");
+            nouvelleRelationItem.Click += (s, e) => relationController.DemanderClassesPourRelation(fenetreTravail);
             // Ajoute le sous-menu "Nouvelle Relation" au menu "Relation"
             relationMenu.DropDownItems.Add(nouvelleRelationItem);
 
