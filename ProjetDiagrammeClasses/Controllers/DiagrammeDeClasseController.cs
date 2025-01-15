@@ -11,6 +11,8 @@ namespace ProjetDiagrammeClasses.Controllers
 {
     internal class DiagrammeDeClasseController
     {
+        // Instanciation de chaque controlleur pour utiliser leurs méthodes 
+        
         ClasseController classController = new ClasseController();
 
         AttributController attributController = new AttributController();
@@ -21,6 +23,8 @@ namespace ProjetDiagrammeClasses.Controllers
 
         CardinaliteController cardinaliteController = new CardinaliteController();
 
+
+        // Méthode gérant le menu
         private void InitializeFenetreTravail(Form fenetreTravail)
         {
 
@@ -75,6 +79,7 @@ namespace ProjetDiagrammeClasses.Controllers
 
 
 
+        // Méthode du menu principal
         public void NouveauMenuItem_Click(object sender, EventArgs e)
         {
             // Crée une nouvelle fenêtre (Form) qui représentera l'espace de travail pour le diagramme de classe

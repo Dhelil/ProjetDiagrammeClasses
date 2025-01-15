@@ -65,12 +65,16 @@ namespace ProjetDiagrammeClasses.Controller
             relationPanel.MouseMove += (s, e) => UpdateCardinalitePosition(fenetre, relationPanel, cardinalitePanel);
         }
 
+
+        // Méthode pour mettre à jour la position de la cardinalité
         private void UpdateCardinalitePosition(Form fenetre, Panel relationPanel, Panel cardinalitePanel)
         {
             // Recalculer la position du panneau de cardinalité en fonction de la relation
             Point newPosition = new Point(relationPanel.Location.X + relationPanel.Width / 2 - cardinalitePanel.Width / 2, relationPanel.Location.Y + relationPanel.Height / 2);
             cardinalitePanel.Location = newPosition;
         }
+
+
 
         // Méthode pour demander à l'utilisateur de choisir une cardinalité et l'ajouter à la relation
         public void DemanderCardinalite(Form fenetre)
